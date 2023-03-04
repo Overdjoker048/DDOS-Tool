@@ -4,7 +4,7 @@ import concurrent.futures
 
 def scan(ip):
     opened_port = []
-    socket.setdefaulttimeout(1)
+    socket.setdefaulttimeout(2)
 
     def run(ip, port):
         scanner = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -12,7 +12,7 @@ def scan(ip):
             opened_port.append(port)
         scanner.close()
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=1000) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=500) as executor:
         for port in range(65535):
             executor.submit(run, ip, port + 1)
 
